@@ -11,6 +11,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     {{-- Link to resource css --}}
     <link rel="stylesheet" href={{ asset('css/app.css') }}>
+    {{-- Link to font Awesome--}}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
 
 </head>
@@ -65,8 +67,30 @@
         </div>
         {{-- End modal--}}
 
+        {{-- Modal pop up si toutes les dépenses dans 1 mois (based on date_created) > revenus dans 1 mois (based on date_in)--}}
+        <div class="modal fade" id="exampleModal1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Attention!!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                    <p>Vous avez la somme de toutes les dépenses dans ce mois ci > vos revenues</p>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+        {{-- End modal --}}
+
        <h3> Welcome {{auth()->user()->name}} to our application! </h3> 
        <form action="/logout" method="POST">
+        {{--When the form is submitted, the CSRF token value will be included in the form data--}}
         @csrf
         <button style="margin-left: 15px;" class="btn btn-outline-warning">Log out</button>
        </form>
@@ -164,7 +188,7 @@
                         <td>
                             @if ($budget->activites->count() > 0)
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <form action="/detail-activite/" method="GET">
                                         @csrf
                                         <select name="activite" id="activite">
@@ -175,7 +199,7 @@
                                         </select>
                                 </div>
                                 <div class="col-md-2">
-                                        <button type="submit" @disabled($errors->isNotEmpty()) class="btn btn-success">Voir</button>
+                                        <button type="submit" @disabled($errors->isNotEmpty()) class="btn btn-success"><i class="fas fa-eye"></i></button>
                                     </form>
                                 </div>
                                 
@@ -183,20 +207,20 @@
                                     <form action="/detail-activite/{{$budget->id}}" method="POST">
                                         @csrf
                                         <input type="text" value="{{$budget->libelle}}" name="budget_libelle" hidden>
-                                        <button type="submit" class="btn btn-warning">Créer</button>
+                                        <button type="submit" class="btn btn-warning"><i class="fas fa-plus"></i></button>
                                     </form>
                                 </div>
                             </div>
                             @else
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <p>No activité relative</p>
                                 </div>
                                 <div class="col-md-2">
                                     <form action="/detail-activite/{{$budget->id}}" method="POST">
                                         @csrf
                                         <input type="text" value="{{$budget->libelle}}" name="budget_libelle" hidden>
-                                        <button type="submit" class="btn btn-warning">Créer</button>
+                                        <button type="submit" class="btn btn-warning"><i class="fas fa-plus"></i></button>
                                     </form>
                                 </div>
                             </div>
@@ -205,7 +229,7 @@
                         <td>
                             @if ($budget->toDoLists->count() > 0)
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <form action="/detail-toDoList/" method="GET">
                                         @csrf
                                         <select name="toDoList" id="toDoList">
@@ -216,7 +240,7 @@
                                         </select>
                                 </div>
                                 <div class="col-md-2">
-                                        <button type="submit" @disabled($errors->isNotEmpty()) class="btn btn-success">Voir</button>
+                                        <button type="submit" @disabled($errors->isNotEmpty()) class="btn btn-success"><i class="fas fa-eye"></i></button>
                                     </form>
                                 </div>
                                 
@@ -224,20 +248,20 @@
                                     <form action="/detail-toDoList/{{$budget->id}}" method="POST">
                                         @csrf
                                         <input type="text" value="{{$budget->libelle}}" name="budget_libelle" hidden>
-                                        <button type="submit" class="btn btn-warning">Créer</button>
+                                        <button type="submit" class="btn btn-warning"><i class="fas fa-plus"></i></button>
                                     </form>
                                 </div>
                             </div>
                             @else
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <p>No to-do-list relative</p>
                                 </div>
                                 <div class="col-md-2">
                                     <form action="/detail-toDoList/{{$budget->id}}" method="POST">
                                         @csrf
                                         <input type="text" value="{{$budget->libelle}}" name="budget_libelle" hidden>
-                                        <button type="submit" class="btn btn-warning">Créer</button>
+                                        <button type="submit" class="btn btn-warning"><i class="fas fa-plus"></i></button>
                                     </form>
                                 </div>
                             </div>
@@ -254,6 +278,7 @@
         
     </div>
 
+
     <div style="border: 3px solid rgb(16, 16, 16); padding : 5px;">
         <div style="border: 3px solid rgb(226, 23, 182);padding : 10px;">
              <h2 style ="color: rgb(226, 23, 182)">Créer une depense</h2>
@@ -266,6 +291,7 @@
                         </ul>
                     </div>
                 @endif
+
              <form action="/create-depense" method="POST">
                  @csrf
                  <input type="text" name="libelle" placeholder="Libelle de la depense" required>
@@ -286,6 +312,13 @@
              @if (count($depenses) !== 0)
         
              <h3>Tous les depenses de {{auth()->user()->name}}</h3>{{--co the viet $depense->user->name de di den function user() belongsTo trong Model Budget--}}
+             <div class="alert alert-success" role="alert">
+                Attention! Vous avez la somme des dépenses et des revenus dans ce mois ci comme en suite: 
+                <ul>
+                    <li>Total Dépenses : {{ $totalExpenses }}</li>
+                    <li>Total Revenues: {{ $totalRevenues }}</li>
+                </ul>
+            </div>
              <table class="table">
                 <thead>
                  <tr>
@@ -489,6 +522,13 @@
             $('#exampleModal').modal('show');
         });
     @endif
+
+    @if ($totalExpenses > $totalRevenues)
+        $(document).ready(function() {
+            $('#exampleModal1').modal('show');
+        });
+    @endif
+
 </script>
 
 

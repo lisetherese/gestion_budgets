@@ -61,14 +61,19 @@ class ActiviteController extends Controller
         if ($request->isMethod('get')){
             $activite = Activite::findOrFail($request->input('activite'));
             $budget = Budget::findOrFail($activite['budget_id']);
+            $activites = $budget->activites;
+            $sumAllActivites = $activites->sum('montant');
             if(Auth::user()->id !== $budget->user_id){
                 return redirect('/')
                     ->withErrors(['editInfo' => 'User is not allowed to edit info']);
             }
-            return view('detailActivite', ['activite' => $activite]);
+            return view('detailActivite', ['activite' => $activite, 'sumAllActivites' => $sumAllActivites, 'budget_montant' => $budget->montant]);
         }
         if ($request->isMethod('post')){
-            return view('detailActivite', ['budget_id' => $id, 'budget_libelle' => $request->input('budget_libelle')]);
+            $budget = Budget::findOrFail($id);
+            $activites = $budget->activites;
+            $sumAllActivites = $activites->sum('montant');
+            return view('detailActivite', ['budget_id' => $id, 'budget_libelle' => $request->input('budget_libelle'), 'sumAllActivites' => $sumAllActivites, 'budget_montant' => $budget->montant]);
         }
     }
 

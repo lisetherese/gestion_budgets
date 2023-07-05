@@ -21,6 +21,15 @@ class UserController extends Controller {
         $revenus = [];
         $toDoListsDone = [];
         $tachesForToday = [];
+
+        // Get the current month and year
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+
+        // set initial value
+        $totalExpenses = 0;
+        $totalRevenues = 0;
+
     
         if(Auth::check()){
             $user = User::findOrFail(Auth::user()->id);
@@ -28,13 +37,6 @@ class UserController extends Controller {
             $depenses = $user->depenses;
             $revenus = $user->revenus;
 
-            /*$tachesForToday =  Tache::where('etat_fait', 0)
-            ->whereHas('toDoList', function ($query) {
-                $query->whereDate('date_creation', today()->format('Y-m-d'))
-                      ->whereHas('budget', function ($query) {
-                          $query->where('user_id', Auth::id());
-                      });
-            })->get();*/
             $tachesForToday = DB::table('taches')
             ->join('to_do_lists', 'taches.to_do_list_id', '=', 'to_do_lists.id')
             ->join('budgets', 'budgets.id', '=', 'to_do_lists.budget_id')
@@ -55,11 +57,95 @@ class UserController extends Controller {
             ->select('to_do_lists.*')
             ->distinct()
             ->get();
+
+    
+
+            foreach ($depenses as $depense) {
+                $expenseDay = date('d', strtotime($depense->created_at));
+                $expenseMonth = date('m', strtotime($depense->created_at));
+                $expenseYear = date('Y', strtotime($depense->created_at));
+
+                
+                // Check the frequency of the depense
+                switch ($depense->frequence) {
+                    case 'quotidien':
+                        if (intval($expenseMonth) < intval($currentMonth) && intval($expenseYear) <= intval($currentYear)) {
+                            $totalExpenses += $depense->montant * 30; // Assuming 30 days in a month
+                        } else if (intval($expenseMonth) == intval($currentMonth) && intval($expenseYear) <= intval($currentYear)) {
+                            $totalExpenses += $depense->montant * (30 - intval($expenseDay) + 1);
+                        }
+                        break;
+                    case 'hebdomadaire':
+                        if (intval($expenseMonth) < intval($currentMonth) && intval($expenseYear) <= intval($currentYear)) {
+                            $totalExpenses += $depense->montant * 4; // Assuming 4 weeks in a month
+                        } else if (intval($expenseMonth) == intval($currentMonth) && intval($expenseYear) <= intval($currentYear)) {
+                            $totalExpenses += $depense->montant * ceil((30 - intval($expenseDay))/7);
+                        }
+                        break;
+                    case 'mensuel':
+                        if (intval($expenseMonth) <= intval($currentMonth) && intval($expenseYear) <= intval($currentYear)) {
+                            $totalExpenses += $depense->montant;
+                        }
+                        break;
+                    case 'annuel':
+                        if (intval($expenseYear) <= intval($currentYear)) {
+                            $totalExpenses += $depense->montant / 12; // Assuming revenue is divided evenly over 12 months
+                        }
+                        break;
+                    case 'uneFois':
+                        if ($expenseMonth == $currentMonth && $expenseYear == $currentYear) {
+                            $totalExpenses += $depense->montant;
+                        }
+                        break;
+                }
+                
+            }
+
+            foreach ($revenus as $revenue) {
+                $revenueDay = date('d', strtotime($revenue->date_in));
+                $revenueMonth = date('m', strtotime($revenue->date_in));
+                $revenueYear = date('Y', strtotime($revenue->date_in));
+
+                // Check the frequency of the depense
+                switch ($revenue->frequence) {
+                    case 'quotidien':
+                        if (intval($revenueMonth) < intval($currentMonth) && intval($revenueYear) <= intval($currentYear)) {
+                            $totalRevenues += $revenue->montant * 30; // Assuming 30 days in a month
+                        }else if (intval($revenueMonth) == intval($currentMonth) && intval($revenueYear) <= intval($currentYear)) {
+                            $totalRevenues += $revenue->montant * (30 - intval($revenueDay) + 1);
+                        }
+                        break;
+                    case 'hebdomadaire':
+                        if (intval($revenueMonth) < intval($currentMonth) && intval($revenueYear) <= intval($currentYear)) {
+                            $totalRevenues += $revenue->montant * 4; // Assuming 4 weeks in a month
+                        }else if (intval($revenueMonth) == intval($currentMonth) && intval($revenueYear) <= intval($currentYear)) {
+                            $totalRevenues += $revenue->montant * ceil((30 - intval($revenueDay))/7);
+                        }
+                        break;
+                    case 'mensuel':
+                        if (intval($revenueMonth) <= intval($currentMonth) && intval($revenueYear) <= intval($currentYear)) {
+                            $totalRevenues += $revenue->montant;
+                        }
+                        break;
+                    case 'annuel':
+                        if (intval($revenueYear) <= intval($currentYear)) {
+                            $totalRevenues += $revenue->montant / 12; // Assuming revenue is divided evenly over 12 months
+                        }
+                        break;
+                    case 'uneFois':
+                        if ($revenueMonth == $currentMonth && $revenueYear == $currentYear) {
+                            $totalRevenues += $revenue->montant;
+                        }
+                        break;
+                }
+                
+            }
+
             
         } 
 
         //$budgets = Budget::where('user_id', auth()->id())->get();
-        return view('home', ['budgets' => $budgets, 'depenses' => $depenses, 'revenus' => $revenus, 'tachesForToday' => $tachesForToday, 'toDoListsDone' => $toDoListsDone]);
+        return view('home', ['budgets' => $budgets, 'depenses' => $depenses, 'revenus' => $revenus, 'tachesForToday' => $tachesForToday, 'toDoListsDone' => $toDoListsDone, 'totalExpenses' => $totalExpenses, 'totalRevenues' => $totalRevenues]);
     }
 
     public function login(Request $request){
